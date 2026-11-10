@@ -83,7 +83,15 @@ export class CheckoutPage extends BasePage {
     phone: string;
     simType?: 'esim' | 'physical';
   }) {
-    await this.firstNameInput.waitFor({ state: 'visible', timeout: 20000 });
+    // Clear cookie prompt if present
+    try {
+      if (await this.cookieAcceptBtn.isVisible({ timeout: 2000 })) {
+        await this.cookieAcceptBtn.click({ force: true });
+      }
+    } catch {}
+
+    // Wait for first form field to mount
+    await this.firstNameInput.waitFor({ state: 'visible', timeout: 30000 });
     await this.firstNameInput.click();
     await this.firstNameInput.fill(details.firstName);
 
@@ -103,13 +111,11 @@ export class CheckoutPage extends BasePage {
     await this.phoneInput.click();
     await this.phoneInput.fill(details.phone);
 
-    // Let the form settle before selecting SIM type
     await this.page.waitForTimeout(500);
 
     if (details.simType === 'physical') {
       await this.physicalSimOption.waitFor({ state: 'visible', timeout: 10000 });
       await this.physicalSimOption.scrollIntoViewIfNeeded();
-      // Click with force: true to bypass any styled overlay or span obstruction
       await this.physicalSimOption.click({ force: true });
     } else {
       if (await this.esimRadio.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -178,14 +184,14 @@ export class CheckoutPage extends BasePage {
     await this.page.waitForURL(/.*billing-address.*/i, { timeout: 35000 });
     await this.page.waitForTimeout(1000);
 
-    // 2. Type street address query
+    // 2. Type street address
     const addressInput = this.page.getByPlaceholder('Nombre de la calle y número')
       .or(this.streetAddressInput).first();
     await addressInput.waitFor({ state: 'visible', timeout: 15000 });
     await addressInput.click();
     await addressInput.fill(addressQuery);
 
-    // 3. Target and click the active autocomplete option
+    // 3. Target active autocomplete option (resolves strict mode)
     const predictionOption = this.page.getByRole('option', { name: /525 Calle 1/i })
       .or(this.page.locator('mat-option:not([aria-disabled="true"])').filter({ hasText: /525/i }))
       .first();
@@ -200,13 +206,13 @@ export class CheckoutPage extends BasePage {
     await expect(continueBtn).toBeEnabled({ timeout: 10000 });
     await continueBtn.click();
 
-    // 5. Dismiss any loading overlay
+    // 5. Wait for standardization loader to disappear
     const loader = this.page.locator('lla-loader-container, .llac-loaders__opacity-50');
     try {
       await loader.waitFor({ state: 'hidden', timeout: 10000 });
     } catch {}
 
-    // 6. If address standardization card/dialog appears, select the suggested address
+    // 6. Select recommended address option if modal appears
     const suggestedAddressRadio = this.page.locator('mat-radio-button, input[type="radio"], [role="radio"]')
       .filter({ hasText: /sugerida|estandarizada|recomendada/i })
       .or(this.page.locator('.mat-mdc-radio-button, mat-radio-button').first());
@@ -220,10 +226,9 @@ export class CheckoutPage extends BasePage {
     await expect(continueBtn).toBeEnabled({ timeout: 15000 });
     await continueBtn.click();
 
-    // 8. Wait for transition to payment page
+    // 8. Route to payment page
     await this.page.waitForURL(/.*payment-tnc.*/i, { timeout: 35000 });
   }
-  
 
   async fillPaymentDetailsAndPay(payment: {
     cardholderName: string;

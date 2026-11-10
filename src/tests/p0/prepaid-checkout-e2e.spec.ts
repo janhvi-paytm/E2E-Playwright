@@ -17,10 +17,10 @@ test.describe('LCPR Prepaid E2E Checkout Flow', () => {
 
     // 2. Customer Lead Capture Form (eSIM)
     await checkoutPage.fillCustomerDetails({
-      firstName: 'Janhvi',
-      lastName: 'Tester',
+      firstName: 'JJ',
+      lastName: 'DD',
       dob: '09/23/2004',
-      email: 'janhvi1.dikhit@example.com',
+      email: 'janhvi1.dikhit@paytm.com',
       phone: '(787)878-7878',
       simType: 'esim',
     });
@@ -31,10 +31,10 @@ test.describe('LCPR Prepaid E2E Checkout Flow', () => {
 
     // 4. Payment
     await checkoutPage.fillPaymentDetailsAndPay({
-      cardholderName: 'Janhvi Tester',
+      cardholderName: 'JJ DD',
       cardNumber: '4111111111111111',
-      expirationDate: '12/28',
-      cvv: '123',
+      expirationDate: '2/30',
+      cvv: '100',
     });
 
     // 5. Order Confirmation
